@@ -122,29 +122,29 @@ export function PosRightPanel() {
         </div>
 
         {paymentMode === 'none' ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <button 
               disabled={cart.length === 0}
               onClick={() => setPaymentMode('cash')}
-              className="col-span-2 h-24 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white rounded-2xl font-bold text-3xl flex items-center justify-center space-x-3 active:scale-[0.98] transition-colors shadow-sm"
+              className="col-span-2 h-[80px] bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white rounded-2xl font-bold text-2xl flex items-center justify-center space-x-3 active:scale-[0.98] transition-colors shadow-sm"
             >
-              <Banknote className="w-10 h-10" />
+              <Banknote className="w-8 h-8" />
               <span>รับเงินสด</span>
             </button>
             <button 
               disabled={cart.length === 0}
               onClick={() => setPaymentMode('promptpay')}
-              className="h-20 bg-slate-100 hover:bg-blue-600 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-2xl flex items-center justify-center space-x-3 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
+              className="h-[64px] bg-slate-100 hover:bg-blue-600 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-xl flex items-center justify-center space-x-2 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
             >
-              <QrCode className="w-7 h-7" />
+              <QrCode className="w-6 h-6" />
               <span>โอนเงิน</span>
             </button>
             <button 
               disabled={cart.length === 0}
               onClick={() => setPaymentMode('credit')}
-              className="h-20 bg-slate-100 hover:bg-slate-800 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-2xl flex items-center justify-center space-x-3 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
+              className="h-[64px] bg-slate-100 hover:bg-slate-800 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-xl flex items-center justify-center space-x-2 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
             >
-              <BookUser className="w-7 h-7" />
+              <BookUser className="w-6 h-6" />
               <span>แปะโป้ง</span>
             </button>
           </div>
