@@ -31,13 +31,11 @@ export function PosLeftPanel() {
 
       if (e.key === 'Enter') {
         if (barcode.length > 3) {
-          const product = inventory.find(p => p.id === barcode || p.name.includes(barcode));
+          const product = inventory.find(p => p.id === barcode || (p.barcode && p.barcode === barcode));
           if (product) {
-            addToCart({ productId: product.id, name: product.name, price: product.price, qty: 1 });
+            addToCart({ productId: product.id, name: product.name, price: product.price, cost: product.cost, qty: 1 });
           } else {
-             if(!isNaN(Number(barcode))) {
-                addToCart({ name: `สินค้า (Barcode: ${barcode})`, price: Number(barcode), qty: 1 });
-             }
+            alert(`ไม่พบสินค้ารหัสบาร์โค้ด: ${barcode} ในระบบ\nกรุณาเพิ่มสินค้าในหน้าคลังสินค้าก่อนครับ`);
           }
         }
         barcode = '';

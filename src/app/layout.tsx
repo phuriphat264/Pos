@@ -10,6 +10,12 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "POS ยายกับตาพาณิชย์",
   description: "ระบบ POS รวดเร็ว ยืดหยุ่น สำหรับหน้าจอสัมผัส",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "POS",
+  },
 };
 
 export default function RootLayout({

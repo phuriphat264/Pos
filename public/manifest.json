@@ -1,0 +1,16 @@
+{
+  "name": "ยายกับตา พาณิชย์ POS",
+  "short_name": "POS",
+  "description": "ระบบจัดการร้านค้า ยายกับตาพาณิชย์",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

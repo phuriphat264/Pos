@@ -9,6 +9,7 @@ export type Product = {
   stock: number;
   minStock: number;
   category?: string;
+  barcode?: string;
   imageColor: string; // for mock UI
   imageUrl?: string;
   soldCount?: number;
