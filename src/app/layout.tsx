@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
-import dynamic from 'next/dynamic';
 import { AuthGuard } from "@/components/AuthGuard";
+import FirebaseSync from "@/components/FirebaseSync";
 
 const inter = Inter({ subsets: ["latin"] });
-const FirebaseSync = dynamic(() => import('@/components/FirebaseSync'), { ssr: false });
 
 export const metadata: Metadata = {
   title: "POS ยายกับตาพาณิชย์",
