@@ -12,6 +12,7 @@ export default function AddProductPage() {
   
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [cost, setCost] = useState('');
   const [stock, setStock] = useState('');
   const [minStock, setMinStock] = useState('10');
   const [category, setCategory] = useState('');
@@ -41,6 +42,7 @@ export default function AddProductPage() {
     addProduct({
       name,
       price: Number(price),
+      cost: cost ? Number(cost) : undefined,
       stock: Number(stock) || 0,
       minStock: Number(minStock) || 0,
       category: category.trim() || undefined,
@@ -83,9 +85,19 @@ export default function AddProductPage() {
                 type="number" 
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full text-xl font-bold p-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:outline-none focus:border-blue-500 transition-all"
+                className="w-full text-xl font-bold p-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:outline-none focus:border-blue-500 transition-all text-blue-700"
                 placeholder="0"
                 required
+              />
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block text-slate-700 font-bold mb-2">ต้นทุน (฿)</label>
+              <input 
+                type="number" 
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                className="w-full text-xl font-bold p-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:outline-none focus:border-blue-500 transition-all text-slate-600"
+                placeholder="0"
               />
             </div>
             <div className="col-span-2 sm:col-span-1">

@@ -19,7 +19,6 @@ export function Navbar() {
     { name: 'บิลย้อนหลัง', path: '/history', icon: ReceiptText },
     { name: 'ลูกหนี้', path: '/customers', icon: BookUser },
     { name: 'คลังสินค้า', path: '/inventory', icon: PackageSearch },
-    { name: 'วงจรปิด', path: '/cctv', icon: Cctv },
     { name: 'แดชบอร์ด', path: '/dashboard', icon: LayoutDashboard },
     { name: 'ตั้งค่า', path: '/settings', icon: Settings },
   ];

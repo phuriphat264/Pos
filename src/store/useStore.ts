@@ -5,24 +5,22 @@ export type Product = {
   id: string;
   name: string;
   price: number;
+  cost?: number;
   stock: number;
   minStock: number;
   category?: string;
   imageColor: string; // for mock UI
   imageUrl?: string;
+  soldCount?: number;
 };
 
-export type Camera = {
-  id: string;
-  name: string;
-  url: string; // HTTP MJPEG stream or Iframe URL
-};
 
 export type CartItem = {
   id: string; // can be productId or a random id for custom price items
   productId?: string;
   name: string;
   price: number;
+  cost?: number;
   qty: number;
 };
 
@@ -80,10 +78,6 @@ interface AppState {
   restoreHeldBill: (id: string) => void;
   deleteHeldBill: (id: string) => void;
 
-  // CCTV Cameras
-  cameras: Camera[];
-  addCamera: (name: string, url: string) => void;
-  deleteCamera: (id: string) => void;
 
   // Customers
   customers: Customer[];
@@ -112,15 +106,16 @@ interface AppState {
   isRemoteUpdate?: boolean;
   lastUpdatedLocal?: number;
   setStoreFromFirebase: (data: Partial<AppState>) => void;
+  resetStore: () => void;
 }
 
 const mockProducts: Product[] = [
-  { id: '1', name: 'น้ำเปล่า', price: 10, stock: 50, minStock: 20, category: 'เครื่องดื่ม', imageColor: 'bg-blue-300' },
-  { id: '2', name: 'โค้กกระป๋อง', price: 15, stock: 30, minStock: 15, category: 'เครื่องดื่ม', imageColor: 'bg-red-500' },
-  { id: '3', name: 'มาม่าหมูสับ', price: 7, stock: 10, minStock: 20, category: 'อาหารแห้ง', imageColor: 'bg-yellow-400' },
-  { id: '4', name: 'เลย์ออริจินัล', price: 20, stock: 15, minStock: 10, category: 'ขนม', imageColor: 'bg-yellow-200' },
-  { id: '5', name: 'ข้าวเกรียบ', price: 12, stock: -2, minStock: 10, category: 'ขนม', imageColor: 'bg-orange-300' },
-  { id: '6', name: 'น้ำแข็งแก้ว', price: 5, stock: 100, minStock: 50, category: 'เครื่องดื่ม', imageColor: 'bg-cyan-200' },
+  { id: '1', name: 'น้ำเปล่า', price: 10, cost: 7, stock: 50, minStock: 20, category: 'เครื่องดื่ม', imageColor: 'bg-blue-300' },
+  { id: '2', name: 'โค้กกระป๋อง', price: 15, cost: 12, stock: 30, minStock: 15, category: 'เครื่องดื่ม', imageColor: 'bg-red-500' },
+  { id: '3', name: 'มาม่าหมูสับ', price: 7, cost: 5, stock: 10, minStock: 20, category: 'อาหารแห้ง', imageColor: 'bg-yellow-400' },
+  { id: '4', name: 'เลย์ออริจินัล', price: 20, cost: 16, stock: 15, minStock: 10, category: 'ขนม', imageColor: 'bg-yellow-200' },
+  { id: '5', name: 'ข้าวเกรียบ', price: 12, cost: 8, stock: -2, minStock: 10, category: 'ขนม', imageColor: 'bg-orange-300' },
+  { id: '6', name: 'น้ำแข็งแก้ว', price: 5, cost: 2, stock: 100, minStock: 50, category: 'เครื่องดื่ม', imageColor: 'bg-cyan-200' },
 ];
 
 const mockCustomers: Customer[] = [
@@ -197,13 +192,6 @@ export const useStore = create<AppState>()(
     heldBills: state.heldBills.filter(b => b.id !== id)
   })),
 
-  cameras: [],
-  addCamera: (name, url) => set((state) => ({
-    cameras: [...state.cameras, { id: 'cam' + Date.now(), name, url }]
-  })),
-  deleteCamera: (id) => set((state) => ({
-    cameras: state.cameras.filter(c => c.id !== id)
-  })),
 
   customers: mockCustomers,
   payDebt: (id, amount) => {
@@ -242,7 +230,7 @@ export const useStore = create<AppState>()(
         items: cart
       };
 
-      // 2. Deduct Stock (only for items with productId)
+      // 2. Deduct Stock and Increment soldCount
       let newInventory = [...state.inventory];
       cart.forEach(item => {
         if (item.productId) {
@@ -250,7 +238,8 @@ export const useStore = create<AppState>()(
           if (productIndex >= 0) {
             newInventory[productIndex] = {
               ...newInventory[productIndex],
-              stock: newInventory[productIndex].stock - item.qty
+              stock: newInventory[productIndex].stock - item.qty,
+              soldCount: (newInventory[productIndex].soldCount || 0) + item.qty
             };
           }
         }
@@ -372,12 +361,25 @@ export const useStore = create<AppState>()(
 
   isRemoteUpdate: false,
   lastUpdatedLocal: Date.now(),
-  setStoreFromFirebase: (data) => set({ ...data, isRemoteUpdate: true })
+  setStoreFromFirebase: (data) => set({ ...data, isRemoteUpdate: true }),
+  resetStore: () => set({
+    inventory: mockProducts,
+    cart: [],
+    sales: [],
+    cashTransactions: [{ id: 'ct1', type: 'in', amount: 1000, note: 'เงินทอนตั้งต้น', date: new Date().toISOString() }],
+    heldBills: [],
+    customers: mockCustomers,
+    storeSettings: {
+      name: 'ร้านค้า POS',
+      address: '',
+      cashFloat: 1000
+    },
+    lastUpdatedLocal: Date.now()
+  })
     }),
     {
       name: 'pos-storage',
       partialize: (state) => {
-        // Don't persist isRemoteUpdate flag
         const { isRemoteUpdate, ...rest } = state;
         return rest;
       }

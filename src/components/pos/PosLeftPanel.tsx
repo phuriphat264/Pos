@@ -14,11 +14,13 @@ export function PosLeftPanel() {
 
   const categories = ['ทั้งหมด', ...Array.from(new Set(inventory.map(p => p.category).filter(Boolean)))];
 
-  const filteredCatalog = inventory.filter(p => {
-    const matchesSearch = p.name.includes(searchQuery);
-    const matchesCategory = selectedCategory === 'ทั้งหมด' || p.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredCatalog = [...inventory]
+    .filter(p => {
+      const matchesSearch = p.name.includes(searchQuery);
+      const matchesCategory = selectedCategory === 'ทั้งหมด' || p.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
 
   useEffect(() => {
     let barcode = '';
@@ -198,16 +200,16 @@ export function PosLeftPanel() {
 
               {/* Categories */}
               {categories.length > 1 && (
-                <div className="flex overflow-x-auto hide-scrollbar space-x-2 pb-2">
+                <div className="flex overflow-x-auto hide-scrollbar space-x-3 pb-2 -mx-4 px-4 md:mx-0 md:px-0">
                   {categories.map(category => (
                     <button
                       key={category as string}
                       onClick={() => setSelectedCategory(category as string)}
                       className={cn(
-                        "whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-colors border",
+                        "whitespace-nowrap px-5 py-3 rounded-xl font-bold text-base transition-colors border shadow-sm flex-shrink-0",
                         selectedCategory === category 
                           ? "bg-slate-800 text-white border-slate-800" 
-                          : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
+                          : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
                       )}
                     >
                       {category as string}
@@ -221,7 +223,7 @@ export function PosLeftPanel() {
               {filteredCatalog.map((product) => (
                 <button
                   key={product.id}
-                  onClick={() => addToCart({ productId: product.id, name: product.name, price: product.price, qty: 1 })}
+                  onClick={() => addToCart({ productId: product.id, name: product.name, price: product.price, cost: product.cost, qty: 1 })}
                   className="group bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-blue-400 hover:shadow-md active:bg-slate-50 transition-all flex flex-col relative h-auto"
                 >
                   <div className={cn("aspect-square w-full flex items-center justify-center overflow-hidden border-b border-slate-100", product.imageUrl ? "bg-white" : product.imageColor)}>
@@ -236,8 +238,8 @@ export function PosLeftPanel() {
                     <div className="font-extrabold text-slate-800 line-clamp-2 text-xl leading-tight text-left mb-2">{product.name}</div>
                     <div className="flex justify-between items-end mt-auto">
                       <span className="text-blue-700 font-black text-2xl">฿{product.price}</span>
-                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded", product.stock <= product.minStock ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600")}>
-                        {product.stock}
+                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded", product.stock <= 0 ? "bg-rose-600 text-white" : product.stock <= product.minStock ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600")}>
+                        {product.stock <= 0 ? 'หมด' : `เหลือ ${product.stock}`}
                       </span>
                     </div>
                   </div>

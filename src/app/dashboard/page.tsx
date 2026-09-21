@@ -11,6 +11,11 @@ export default function DashboardPage() {
   const [actualCash, setActualCash] = useState('');
 
   const totalSales = useMemo(() => sales.filter(s => !s.isVoided).reduce((acc, sale) => acc + sale.total, 0), [sales]);
+  const totalCost = useMemo(() => sales.filter(s => !s.isVoided).reduce((acc, sale) => {
+    return acc + sale.items.reduce((itemAcc, item) => itemAcc + ((item.cost || 0) * item.qty), 0);
+  }, 0), [sales]);
+  const totalProfit = totalSales - totalCost;
+
   const cashSales = useMemo(() => sales.filter(s => s.type === 'cash' && !s.isVoided).reduce((acc, sale) => acc + sale.total, 0), [sales]);
   const promptpaySales = useMemo(() => sales.filter(s => s.type === 'promptpay' && !s.isVoided).reduce((acc, sale) => acc + sale.total, 0), [sales]);
   const creditSales = useMemo(() => sales.filter(s => s.type === 'credit' && !s.isVoided).reduce((acc, sale) => acc + sale.total, 0), [sales]);
@@ -61,10 +66,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center">
           <div className="text-slate-500 font-bold mb-2 flex items-center space-x-2"><Receipt className="w-5 h-5 text-blue-600"/><span>ยอดขายรวม</span></div>
           <div className="text-4xl font-black text-slate-800 tracking-tight">฿{totalSales.toLocaleString()}</div>
+        </div>
+        <div className="bg-emerald-50 p-6 rounded-xl shadow-sm border border-emerald-200 flex flex-col justify-center relative overflow-hidden">
+          <div className="text-emerald-700 font-bold mb-2 flex items-center space-x-2 relative z-10"><TrendingUp className="w-5 h-5 text-emerald-600"/><span>กำไรสุทธิ</span></div>
+          <div className="text-4xl font-black text-emerald-600 tracking-tight relative z-10">฿{totalProfit.toLocaleString()}</div>
+          <div className="absolute -right-4 -bottom-4 text-emerald-100 opacity-50"><TrendingUp className="w-24 h-24" /></div>
         </div>
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center">
           <div className="text-slate-500 font-bold mb-2 flex items-center space-x-2"><Banknote className="w-5 h-5 text-emerald-600"/><span>ยอดขายเงินสด</span></div>

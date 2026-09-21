@@ -172,9 +172,9 @@ export function PosRightPanel() {
       </div>
 
       <div className="bg-white border-t border-slate-200 p-6 z-20">
-        <div className="flex justify-between items-end mb-6">
-          <div className="text-slate-500 font-bold text-xl tracking-wider">ยอดรวมทั้งสิ้น</div>
-          <div className="text-5xl font-black text-slate-800 tracking-tighter">฿{total.toLocaleString()}</div>
+        <div className="flex justify-between items-center mb-6">
+          <span className="font-bold text-slate-500 text-lg">ยอดรวมทั้งสิ้น</span>
+          <span className="font-black text-5xl font-mono text-slate-800 tracking-tighter">฿{total}</span>
         </div>
 
         {paymentMode === 'none' ? (
@@ -190,7 +190,7 @@ export function PosRightPanel() {
             <button 
               disabled={cart.length === 0}
               onClick={() => setPaymentMode('promptpay')}
-              className="h-14 bg-slate-100 hover:bg-blue-600 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
+              className="h-14 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-all shadow-sm"
             >
               <QrCode className="w-5 h-5" />
               <span>โอนเงิน</span>
@@ -198,7 +198,7 @@ export function PosRightPanel() {
             <button 
               disabled={cart.length === 0}
               onClick={() => setPaymentMode('credit')}
-              className="h-14 bg-slate-100 hover:bg-slate-800 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
+              className="h-14 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-all shadow-sm"
             >
               <BookUser className="w-5 h-5" />
               <span>แปะโป้ง</span>
