@@ -7,12 +7,13 @@ import generatePayload from 'promptpay-qr';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function PosRightPanel() {
-  const { cart, removeFromCart, updateCartQty, clearCart, getCartTotal, checkout, customers, addCustomer } = useStore();
+  const { cart, removeFromCart, updateCartQty, clearCart, getCartTotal, checkout, customers, addCustomer, heldBills, holdCurrentBill, restoreHeldBill, deleteHeldBill } = useStore();
   const [paymentMode, setPaymentMode] = useState<'none' | 'cash' | 'promptpay' | 'credit'>('none');
   const [cashReceived, setCashReceived] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState('');
+  const [showHeldBills, setShowHeldBills] = useState(false);
 
   const total = getCartTotal();
 
@@ -54,23 +55,78 @@ export function PosRightPanel() {
 
   return (
     <div className="h-full flex flex-col relative bg-white border-l border-gray-100">
-      <div className="p-6 border-b border-gray-100 flex justify-between items-center z-10 bg-white">
+      <div className="p-4 md:p-6 border-b border-gray-100 flex flex-col md:flex-row md:justify-between md:items-center z-10 bg-white gap-4">
         <div className="flex items-center space-x-3 text-2xl font-extrabold text-slate-800">
           <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
             <ShoppingCart className="w-6 h-6" />
           </div>
-          <span>ตะกร้าสินค้า</span>
+          <span>ตะกร้า</span>
           <span className="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">{cart.length}</span>
+          {heldBills.length > 0 && (
+            <button 
+              onClick={() => setShowHeldBills(true)}
+              className="ml-2 text-sm bg-amber-100 text-amber-700 hover:bg-amber-200 px-3 py-1.5 rounded-xl font-bold flex items-center transition-colors"
+            >
+              พักไว้ ({heldBills.length})
+            </button>
+          )}
         </div>
-        {cart.length > 0 && (
-          <button onClick={clearCart} className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-xl transition-all font-semibold flex items-center space-x-2">
-            <Trash2 className="w-5 h-5" />
-            <span>ล้างบิล</span>
-          </button>
-        )}
+        <div className="flex gap-2 justify-end">
+          {cart.length > 0 && (
+            <>
+              <button onClick={holdCurrentBill} className="text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-4 py-2 rounded-xl transition-all font-semibold flex items-center space-x-2">
+                <span>พักบิล</span>
+              </button>
+              <button onClick={clearCart} className="text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 px-4 py-2 rounded-xl transition-all font-semibold flex items-center space-x-2">
+                <Trash2 className="w-5 h-5" />
+                <span className="hidden xl:inline">ล้างบิล</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
+      <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50 relative">
+        {/* Held Bills Modal */}
+        {showHeldBills && (
+          <div className="absolute inset-0 bg-white z-30 flex flex-col animate-in slide-in-from-top-4">
+            <div className="p-4 border-b flex justify-between items-center bg-amber-50 text-amber-800">
+              <h3 className="font-bold text-xl">บิลที่พักไว้ ({heldBills.length})</h3>
+              <button onClick={() => setShowHeldBills(false)} className="p-2 hover:bg-amber-200 rounded-lg"><X className="w-6 h-6" /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {heldBills.map((bill) => (
+                <div key={bill.id} className="border border-slate-200 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:border-amber-300 transition-colors">
+                  <div>
+                    <div className="font-bold text-slate-800 text-lg">{bill.name}</div>
+                    <div className="text-slate-500 text-sm">{bill.items.length} รายการ • ฿{bill.items.reduce((sum, item) => sum + item.price * item.qty, 0).toLocaleString()}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => deleteHeldBill(bill.id)} className="p-3 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        restoreHeldBill(bill.id);
+                        setShowHeldBills(false);
+                      }} 
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
+                    >
+                      เรียกบิล
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {heldBills.length === 0 && (
+                <div className="text-center text-slate-500 mt-10 font-medium">
+                  ไม่มีบิลที่พักไว้
+                  {setShowHeldBills(false)}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {cart.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
             <ShoppingCart className="w-24 h-24 opacity-20 mb-4" />
@@ -87,14 +143,14 @@ export function PosRightPanel() {
                     <button 
                       onClick={() => updateCartQty(item.id, item.qty - 1)} 
                       disabled={item.qty <= 1} 
-                      className="w-12 h-12 flex items-center justify-center rounded-lg bg-white shadow-sm border border-slate-200 text-slate-600 disabled:opacity-50 hover:bg-slate-100 active:scale-95 text-2xl font-bold transition-all"
+                      className="w-10 h-10 flex items-center justify-center rounded-lg bg-white shadow-sm border border-slate-200 text-slate-600 disabled:opacity-50 hover:bg-slate-100 active:scale-95 text-xl font-bold transition-all"
                     >
                       -
                     </button>
-                    <span className="w-12 text-center font-bold text-xl text-slate-800">{item.qty}</span>
+                    <span className="w-10 text-center font-bold text-xl text-slate-800">{item.qty}</span>
                     <button 
                       onClick={() => updateCartQty(item.id, item.qty + 1)} 
-                      className="w-12 h-12 flex items-center justify-center rounded-lg bg-white shadow-sm border border-slate-200 text-slate-600 hover:bg-slate-100 active:scale-95 text-2xl font-bold transition-all"
+                      className="w-10 h-10 flex items-center justify-center rounded-lg bg-white shadow-sm border border-slate-200 text-slate-600 hover:bg-slate-100 active:scale-95 text-xl font-bold transition-all"
                     >
                       +
                     </button>
@@ -107,7 +163,7 @@ export function PosRightPanel() {
                   onClick={() => removeFromCart(index)}
                   className="ml-4 p-3 text-rose-400 hover:text-white hover:bg-rose-500 rounded-xl transition-colors opacity-100 md:opacity-0 group-hover:opacity-100 shadow-sm md:shadow-none"
                 >
-                  <X className="w-7 h-7" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             ))}
@@ -118,7 +174,7 @@ export function PosRightPanel() {
       <div className="bg-white border-t border-slate-200 p-6 z-20">
         <div className="flex justify-between items-end mb-6">
           <div className="text-slate-500 font-bold text-xl tracking-wider">ยอดรวมทั้งสิ้น</div>
-          <div className="text-6xl font-black text-slate-800 tracking-tighter">฿{total.toLocaleString()}</div>
+          <div className="text-5xl font-black text-slate-800 tracking-tighter">฿{total.toLocaleString()}</div>
         </div>
 
         {paymentMode === 'none' ? (
@@ -126,25 +182,25 @@ export function PosRightPanel() {
             <button 
               disabled={cart.length === 0}
               onClick={() => setPaymentMode('cash')}
-              className="col-span-2 h-[80px] bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white rounded-2xl font-bold text-2xl flex items-center justify-center space-x-3 active:scale-[0.98] transition-colors shadow-sm"
+              className="col-span-2 h-16 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white rounded-xl font-bold text-2xl flex items-center justify-center space-x-3 active:scale-[0.98] transition-colors shadow-sm"
             >
-              <Banknote className="w-8 h-8" />
+              <Banknote className="w-7 h-7" />
               <span>รับเงินสด</span>
             </button>
             <button 
               disabled={cart.length === 0}
               onClick={() => setPaymentMode('promptpay')}
-              className="h-[64px] bg-slate-100 hover:bg-blue-600 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-xl flex items-center justify-center space-x-2 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
+              className="h-14 bg-slate-100 hover:bg-blue-600 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
             >
-              <QrCode className="w-6 h-6" />
+              <QrCode className="w-5 h-5" />
               <span>โอนเงิน</span>
             </button>
             <button 
               disabled={cart.length === 0}
               onClick={() => setPaymentMode('credit')}
-              className="h-[64px] bg-slate-100 hover:bg-slate-800 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-xl flex items-center justify-center space-x-2 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
+              className="h-14 bg-slate-100 hover:bg-slate-800 hover:text-white disabled:bg-slate-100 disabled:text-slate-400 text-slate-700 rounded-xl font-bold text-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-all border border-slate-200 hover:border-transparent"
             >
-              <BookUser className="w-6 h-6" />
+              <BookUser className="w-5 h-5" />
               <span>แปะโป้ง</span>
             </button>
           </div>
@@ -164,21 +220,28 @@ export function PosRightPanel() {
             {paymentMode === 'cash' && (
               <div className="space-y-4">
                 <div className="grid grid-cols-4 gap-2">
-                  {[100, 500, 1000].map(amt => (
-                    <button 
-                      key={amt} 
-                      onClick={() => setCashReceived(amt.toString())}
-                      className="py-3 bg-white text-slate-700 font-bold rounded-lg border border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 active:bg-emerald-100 transition-colors"
-                    >
-                      +{amt}
-                    </button>
-                  ))}
                   <button 
                     onClick={() => setCashReceived(total.toString())}
-                    className="py-3 bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 hover:border-blue-400 active:bg-blue-100 transition-colors"
+                    className="py-3 bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 hover:border-blue-400 active:bg-blue-100 transition-colors shadow-sm"
                   >
                     พอดี
                   </button>
+                  {[
+                    total <= 100 ? 100 : Math.ceil(total / 100) * 100,
+                    total <= 500 ? 500 : Math.ceil(total / 500) * 500,
+                    total <= 1000 ? 1000 : Math.ceil(total / 1000) * 1000
+                  ]
+                    .filter((amt, index, self) => amt > total && self.indexOf(amt) === index) // Unique and strictly greater than total
+                    .slice(0, 3) // Get up to 3 options
+                    .map(amt => (
+                    <button 
+                      key={amt} 
+                      onClick={() => setCashReceived(amt.toString())}
+                      className="py-3 bg-white text-slate-700 font-bold text-lg rounded-lg border border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 active:bg-emerald-100 transition-colors shadow-sm"
+                    >
+                      {amt.toLocaleString()}
+                    </button>
+                  ))}
                 </div>
                 <input 
                   type="number"
@@ -189,9 +252,9 @@ export function PosRightPanel() {
                   autoFocus
                 />
                 {Number(cashReceived) >= total && (
-                  <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-lg text-emerald-800 border border-emerald-200 animate-in zoom-in-95">
-                    <span className="font-extrabold text-lg">เงินทอน</span>
-                    <span className="font-black text-3xl">฿{(Number(cashReceived) - total).toLocaleString()}</span>
+                  <div className="flex flex-col items-center justify-center p-6 bg-emerald-100 rounded-xl text-emerald-800 border-2 border-emerald-400 animate-in zoom-in-95 shadow-inner">
+                    <span className="font-extrabold text-xl mb-1 text-emerald-700">เงินทอน (บาท)</span>
+                    <span className="font-black text-6xl drop-shadow-sm">{(Number(cashReceived) - total).toLocaleString()}</span>
                   </div>
                 )}
                 <button 

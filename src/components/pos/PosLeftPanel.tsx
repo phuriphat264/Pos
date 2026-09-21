@@ -139,43 +139,43 @@ export function PosLeftPanel() {
         {activeTab === 'calc' ? (
           <div className="max-w-md w-full flex-1 flex flex-col justify-center">
             {/* Screen */}
-            <div className="bg-slate-100 border-2 border-slate-300 rounded-xl p-6 shadow-inner mb-6 relative overflow-hidden flex flex-col justify-end min-h-[140px]">
-              <div className="text-right text-5xl font-mono tracking-tighter font-semibold text-slate-800 break-all flex items-center justify-end">
+            <div className="bg-slate-100 border-2 border-slate-300 rounded-xl p-4 shadow-inner mb-4 relative overflow-hidden flex flex-col justify-end min-h-[100px]">
+              <div className="text-right text-4xl font-mono tracking-tighter font-semibold text-slate-800 break-all flex items-center justify-end">
                 {displayInput}
               </div>
             </div>
             
             {/* Keypad */}
-            <div className="grid grid-cols-4 gap-4 flex-1 content-start">
+            <div className="grid grid-cols-4 gap-3 flex-1 content-start">
               {/* Row 1 */}
-              <button onClick={() => handleCalcPress('C')} className="h-[72px] text-2xl font-bold rounded-xl shadow-sm border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 active:bg-rose-200 transition-colors">C</button>
-              <button onClick={() => handleCalcPress('DEL')} className="h-[72px] flex items-center justify-center font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Delete className="w-7 h-7" /></button>
-              <button onClick={() => handleCalcPress('/')} className="h-[72px] text-3xl font-medium rounded-xl shadow-sm border border-slate-300 bg-slate-200 text-slate-800 hover:bg-slate-300 active:bg-slate-400 transition-colors">÷</button>
-              <button onClick={() => handleCalcPress('*')} className="h-[72px] text-3xl font-medium rounded-xl shadow-sm border border-slate-300 bg-slate-200 text-slate-800 hover:bg-slate-300 active:bg-slate-400 transition-colors">×</button>
+              <button onClick={() => handleCalcPress('C')} className="h-16 text-xl font-bold rounded-xl shadow-sm border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 active:bg-rose-200 transition-colors">C</button>
+              <button onClick={() => handleCalcPress('DEL')} className="h-16 flex items-center justify-center font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Delete className="w-7 h-7" /></button>
+              <button onClick={() => handleCalcPress('/')} className="h-16 text-3xl font-medium rounded-xl shadow-sm border border-slate-300 bg-slate-200 text-slate-800 hover:bg-slate-300 active:bg-slate-400 transition-colors">÷</button>
+              <button onClick={() => handleCalcPress('*')} className="h-16 text-3xl font-medium rounded-xl shadow-sm border border-slate-300 bg-slate-200 text-slate-800 hover:bg-slate-300 active:bg-slate-400 transition-colors">×</button>
 
               {/* Row 2 */}
-              <button onClick={() => handleCalcPress('7')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">7</button>
-              <button onClick={() => handleCalcPress('8')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">8</button>
-              <button onClick={() => handleCalcPress('9')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">9</button>
-              <button onClick={() => handleCalcPress('-')} className="h-[72px] text-4xl font-medium rounded-xl shadow-sm border border-slate-300 bg-slate-200 text-slate-800 hover:bg-slate-300 active:bg-slate-400 transition-colors">-</button>
+              <button onClick={() => handleCalcPress('7')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">7</button>
+              <button onClick={() => handleCalcPress('8')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">8</button>
+              <button onClick={() => handleCalcPress('9')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">9</button>
+              <button onClick={() => handleCalcPress('-')} className="h-16 text-4xl font-medium rounded-xl shadow-sm border border-slate-300 bg-slate-200 text-slate-800 hover:bg-slate-300 active:bg-slate-400 transition-colors">-</button>
 
               {/* Row 3 */}
-              <button onClick={() => handleCalcPress('4')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">4</button>
-              <button onClick={() => handleCalcPress('5')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">5</button>
-              <button onClick={() => handleCalcPress('6')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">6</button>
-              <button onClick={() => handleCalcPress('+')} className="h-[72px] text-4xl font-medium rounded-xl shadow-sm border border-slate-300 bg-slate-200 text-slate-800 hover:bg-slate-300 active:bg-slate-400 transition-colors">+</button>
+              <button onClick={() => handleCalcPress('4')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">4</button>
+              <button onClick={() => handleCalcPress('5')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">5</button>
+              <button onClick={() => handleCalcPress('6')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">6</button>
+              <button onClick={() => handleCalcPress('+')} className="h-16 text-3xl font-medium rounded-xl shadow-sm border border-slate-300 bg-slate-200 text-slate-800 hover:bg-slate-300 active:bg-slate-400 transition-colors">+</button>
 
               {/* Row 4 */}
-              <button onClick={() => handleCalcPress('1')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">1</button>
-              <button onClick={() => handleCalcPress('2')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">2</button>
-              <button onClick={() => handleCalcPress('3')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">3</button>
-              <button onClick={handleAddToBill} className="col-span-1 row-span-2 h-full bg-blue-600 hover:bg-blue-700 text-white text-2xl font-bold rounded-xl shadow-sm transition-colors flex flex-col items-center justify-center">
+              <button onClick={() => handleCalcPress('1')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">1</button>
+              <button onClick={() => handleCalcPress('2')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">2</button>
+              <button onClick={() => handleCalcPress('3')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">3</button>
+              <button onClick={handleAddToBill} className="col-span-1 row-span-2 h-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-xl shadow-sm transition-colors flex flex-col items-center justify-center">
                 <span>ลงบิล</span>
               </button>
 
               {/* Row 5 */}
-              <button onClick={() => handleCalcPress('0')} className="col-span-2 h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">0</button>
-              <button onClick={() => handleCalcPress('.')} className="h-[72px] text-3xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">.</button>
+              <button onClick={() => handleCalcPress('0')} className="col-span-2 h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">0</button>
+              <button onClick={() => handleCalcPress('.')} className="h-16 text-2xl font-bold rounded-xl shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors">.</button>
             </div>
           </div>
         ) : (

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type Product = {
   id: string;
@@ -9,6 +10,12 @@ export type Product = {
   category?: string;
   imageColor: string; // for mock UI
   imageUrl?: string;
+};
+
+export type Camera = {
+  id: string;
+  name: string;
+  url: string; // HTTP MJPEG stream or Iframe URL
 };
 
 export type CartItem = {
@@ -43,6 +50,13 @@ export type CashTransaction = {
   date: string;
 };
 
+export type HeldBill = {
+  id: string;
+  items: CartItem[];
+  timestamp: string;
+  name?: string;
+};
+
 interface AppState {
   // Inventory
   inventory: Product[];
@@ -59,6 +73,17 @@ interface AppState {
   removeFromCart: (index: number) => void;
   clearCart: () => void;
   getCartTotal: () => number;
+
+  // Held Bills
+  heldBills: HeldBill[];
+  holdCurrentBill: () => void;
+  restoreHeldBill: (id: string) => void;
+  deleteHeldBill: (id: string) => void;
+
+  // CCTV Cameras
+  cameras: Camera[];
+  addCamera: (name: string, url: string) => void;
+  deleteCamera: (id: string) => void;
 
   // Customers
   customers: Customer[];
@@ -82,6 +107,11 @@ interface AppState {
     cashFloat: number;
   };
   updateSettings: (settings: Partial<AppState['storeSettings']>) => void;
+
+  // Sync state
+  isRemoteUpdate?: boolean;
+  lastUpdatedLocal?: number;
+  setStoreFromFirebase: (data: Partial<AppState>) => void;
 }
 
 const mockProducts: Product[] = [
@@ -99,8 +129,10 @@ const mockCustomers: Customer[] = [
   { id: 'c3', name: 'พี่สมชาย', debt: 0 },
 ];
 
-export const useStore = create<AppState>((set, get) => ({
-  inventory: mockProducts,
+export const useStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      inventory: mockProducts,
   updateStock: (id, newStock) => set((state) => ({
     inventory: state.inventory.map(p => p.id === id ? { ...p, stock: newStock } : p)
   })),
@@ -139,10 +171,52 @@ export const useStore = create<AppState>((set, get) => ({
   clearCart: () => set({ cart: [] }),
   getCartTotal: () => get().cart.reduce((total, item) => total + (item.price * item.qty), 0),
 
-  customers: mockCustomers,
-  payDebt: (id, amount) => set((state) => ({
-    customers: state.customers.map(c => c.id === id ? { ...c, debt: Math.max(0, c.debt - amount) } : c)
+  heldBills: [],
+  holdCurrentBill: () => set((state) => {
+    if (state.cart.length === 0) return state;
+    const newBill: HeldBill = {
+      id: 'hb' + Date.now(),
+      items: [...state.cart],
+      timestamp: new Date().toISOString(),
+      name: `พักบิล ${new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`
+    };
+    return {
+      heldBills: [...state.heldBills, newBill],
+      cart: []
+    };
+  }),
+  restoreHeldBill: (id) => set((state) => {
+    const bill = state.heldBills.find(b => b.id === id);
+    if (!bill) return state;
+    return {
+      cart: bill.items,
+      heldBills: state.heldBills.filter(b => b.id !== id)
+    };
+  }),
+  deleteHeldBill: (id) => set((state) => ({
+    heldBills: state.heldBills.filter(b => b.id !== id)
   })),
+
+  cameras: [],
+  addCamera: (name, url) => set((state) => ({
+    cameras: [...state.cameras, { id: 'cam' + Date.now(), name, url }]
+  })),
+  deleteCamera: (id) => set((state) => ({
+    cameras: state.cameras.filter(c => c.id !== id)
+  })),
+
+  customers: mockCustomers,
+  payDebt: (id, amount) => {
+    const customer = get().customers.find(c => c.id === id);
+    if (!customer) return;
+    
+    // Create cash transaction for debt payment
+    get().addCashTransaction('in', amount, `ชำระหนี้จากลูกค้ารหัส ${id} (${customer.name})`);
+    
+    set((state) => ({
+      customers: state.customers.map(c => c.id === id ? { ...c, debt: Math.max(0, c.debt - amount) } : c)
+    }));
+  },
   addCustomer: (name) => {
     const newId = 'c' + Date.now();
     set((state) => ({
@@ -275,7 +349,7 @@ export const useStore = create<AppState>((set, get) => ({
   }, 0),
 
   storeSettings: {
-    name: 'ร้านค้า POS แม่ค้า',
+    name: 'ยายกับตาพาณิชย์',
     address: '123 ถ.ทดสอบ ต.จำลอง อ.เมือง จ.กรุงเทพ 10110',
     cashFloat: 1000
   },
@@ -291,7 +365,22 @@ export const useStore = create<AppState>((set, get) => ({
     }
     return {
       storeSettings: { ...state.storeSettings, ...settings },
-      cashTransactions: newTransactions
+      cashTransactions: newTransactions,
+      lastUpdatedLocal: Date.now()
     };
-  })
-}));
+  }),
+
+  isRemoteUpdate: false,
+  lastUpdatedLocal: Date.now(),
+  setStoreFromFirebase: (data) => set({ ...data, isRemoteUpdate: true })
+    }),
+    {
+      name: 'pos-storage',
+      partialize: (state) => {
+        // Don't persist isRemoteUpdate flag
+        const { isRemoteUpdate, ...rest } = state;
+        return rest;
+      }
+    }
+  )
+);

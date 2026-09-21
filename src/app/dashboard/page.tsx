@@ -1,21 +1,53 @@
 'use client';
 import { useStore } from '@/store/useStore';
-import { useMemo } from 'react';
-import { Banknote, CreditCard, Wallet, Users, Receipt, TrendingUp } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Banknote, CreditCard, Wallet, Users, Receipt, TrendingUp, X, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
-  const { sales, customers, cashTransactions, payDebt, getCashInDrawer } = useStore();
+  const { sales, customers, cashTransactions, payDebt, getCashInDrawer, addCashTransaction, storeSettings } = useStore();
 
-  const totalSales = useMemo(() => sales.reduce((acc, sale) => acc + sale.total, 0), [sales]);
-  const cashSales = useMemo(() => sales.filter(s => s.type === 'cash').reduce((acc, sale) => acc + sale.total, 0), [sales]);
-  const promptpaySales = useMemo(() => sales.filter(s => s.type === 'promptpay').reduce((acc, sale) => acc + sale.total, 0), [sales]);
-  const creditSales = useMemo(() => sales.filter(s => s.type === 'credit').reduce((acc, sale) => acc + sale.total, 0), [sales]);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const [actualCash, setActualCash] = useState('');
+
+  const totalSales = useMemo(() => sales.filter(s => !s.isVoided).reduce((acc, sale) => acc + sale.total, 0), [sales]);
+  const cashSales = useMemo(() => sales.filter(s => s.type === 'cash' && !s.isVoided).reduce((acc, sale) => acc + sale.total, 0), [sales]);
+  const promptpaySales = useMemo(() => sales.filter(s => s.type === 'promptpay' && !s.isVoided).reduce((acc, sale) => acc + sale.total, 0), [sales]);
+  const creditSales = useMemo(() => sales.filter(s => s.type === 'credit' && !s.isVoided).reduce((acc, sale) => acc + sale.total, 0), [sales]);
   
   const debtors = useMemo(() => customers.filter(c => c.debt > 0), [customers]);
   const totalDebt = useMemo(() => debtors.reduce((acc, c) => acc + c.debt, 0), [debtors]);
 
   const expectedCashInDrawer = getCashInDrawer();
+
+  const handleShiftClose = (e: React.FormEvent) => {
+    e.preventDefault();
+    const actual = Number(actualCash);
+    const diff = actual - expectedCashInDrawer;
+    
+    // บันทึกเงินออกเพื่อปิดกะ (นำเงินในเก๊ะออกทั้งหมด ให้เหลือเท่ากับ cashFloat ของพรุ่งนี้)
+    const amountToWithdraw = actual - storeSettings.cashFloat;
+    if (amountToWithdraw !== 0) {
+      addCashTransaction('out', amountToWithdraw, `นำเงินออกเพื่อปิดกะ (เงินส่วนต่าง: ${diff >= 0 ? '+' : ''}${diff})`);
+    }
+    
+    setIsShiftModalOpen(false);
+    setActualCash('');
+  };
+
+  // Mock data for 7-day sales chart
+  const last7Days = useMemo(() => {
+    return Array.from({length: 7}).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return {
+        label: d.toLocaleDateString('th-TH', { weekday: 'short' }),
+        // For today (last item), use real totalSales, otherwise use random mock data
+        value: i === 6 ? totalSales : Math.floor(Math.random() * 5000) + 1000
+      };
+    });
+  }, [totalSales]);
+  const maxChartValue = Math.max(...last7Days.map(d => d.value), 100);
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto h-full overflow-y-auto animate-in fade-in duration-300">
@@ -51,10 +83,18 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Register Closing */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col">
-          <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center space-x-3">
-            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><Wallet className="w-6 h-6" /></div>
-            <span>สรุปปิดยอดลิ้นชักเงินสด</span>
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-slate-800 flex items-center space-x-3">
+              <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><Wallet className="w-6 h-6" /></div>
+              <span>ปิดยอดลิ้นชักเงินสด</span>
+            </h2>
+            <button 
+              onClick={() => setIsShiftModalOpen(true)}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg transition-colors text-sm"
+            >
+              ปิดกะประจำวัน
+            </button>
+          </div>
           <div className="bg-slate-50 rounded-xl p-6 space-y-4 border border-slate-200">
             <div className="flex justify-between items-center text-slate-600">
               <span className="font-semibold">เงินสดรับเข้า (รวมยอดขายเงินสด)</span>
@@ -131,6 +171,113 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Sales Chart */}
+      <div className="mt-8 bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+        <h2 className="text-2xl font-bold text-slate-800 mb-8 flex items-center space-x-3">
+          <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><BarChart3 className="w-6 h-6" /></div>
+          <span>แนวโน้มยอดขาย 7 วันล่าสุด</span>
+        </h2>
+        <div className="h-64 flex items-end space-x-2 md:space-x-6">
+          {last7Days.map((day, i) => {
+            const heightPercent = Math.max((day.value / maxChartValue) * 100, 2); // At least 2% to show a small bar
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center group relative">
+                {/* Tooltip */}
+                <div className="opacity-0 group-hover:opacity-100 absolute -top-12 bg-slate-800 text-white text-sm font-bold py-1 px-3 rounded-lg pointer-events-none transition-opacity whitespace-nowrap z-10">
+                  ฿{day.value.toLocaleString()}
+                </div>
+                {/* Bar */}
+                <div className="w-full flex-1 flex items-end bg-slate-50 rounded-t-lg overflow-hidden relative">
+                  <div 
+                    className={cn(
+                      "w-full rounded-t-lg transition-all duration-700 ease-out", 
+                      i === 6 ? "bg-blue-500 group-hover:bg-blue-600" : "bg-slate-300 group-hover:bg-slate-400"
+                    )}
+                    style={{ height: `${heightPercent}%` }}
+                  ></div>
+                </div>
+                <div className={cn("mt-4 text-sm font-bold", i === 6 ? "text-blue-600" : "text-slate-500")}>
+                  {day.label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Shift Close Modal */}
+      {isShiftModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <form onSubmit={handleShiftClose} className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl animate-in zoom-in-95">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-slate-800 flex items-center">
+                <Wallet className="w-6 h-6 mr-2 text-emerald-600" />
+                ปิดกะประจำวัน
+              </h3>
+              <button type="button" onClick={() => setIsShiftModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5"/></button>
+            </div>
+            
+            <div className="bg-slate-50 p-4 rounded-xl mb-6 border border-slate-100">
+              <div className="text-sm text-slate-500 mb-1">ยอดเงินในลิ้นชักตามระบบ</div>
+              <div className="font-black text-4xl text-slate-800">฿{expectedCashInDrawer.toLocaleString()}</div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">จำนวนเงินสดที่นับได้จริง (บาท)</label>
+                <input 
+                  type="number" 
+                  required
+                  min="0"
+                  value={actualCash}
+                  onChange={e => setActualCash(e.target.value)}
+                  className="w-full p-4 text-3xl font-black text-right text-emerald-700 border border-slate-300 rounded-xl focus:border-emerald-500 focus:outline-none"
+                  autoFocus
+                  placeholder="0"
+                />
+              </div>
+              
+              {actualCash !== '' && (
+                <div className={cn(
+                  "p-4 rounded-xl border flex justify-between items-center",
+                  Number(actualCash) === expectedCashInDrawer ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
+                  Number(actualCash) > expectedCashInDrawer ? "bg-blue-50 border-blue-200 text-blue-700" :
+                  "bg-rose-50 border-rose-200 text-rose-700"
+                )}>
+                  <span className="font-bold">
+                    {Number(actualCash) === expectedCashInDrawer ? "ยอดเงินพอดีเป๊ะ!" :
+                     Number(actualCash) > expectedCashInDrawer ? "เงินเกิน (Over)" : "เงินขาด (Short)"}
+                  </span>
+                  <span className="font-black text-2xl">
+                    {Number(actualCash) !== expectedCashInDrawer && (
+                      Number(actualCash) > expectedCashInDrawer ? '+' : ''
+                    )}
+                    {(Number(actualCash) - expectedCashInDrawer).toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex space-x-3">
+              <button 
+                type="button" 
+                onClick={() => setIsShiftModalOpen(false)}
+                className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button 
+                type="submit" 
+                disabled={actualCash === ''}
+                className="flex-1 py-3 bg-slate-800 disabled:bg-slate-300 text-white font-bold rounded-xl hover:bg-slate-900 transition-colors"
+              >
+                ยืนยันปิดกะ
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

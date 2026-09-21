@@ -93,10 +93,22 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-6 flex justify-end">
+          <div className="pt-6 flex gap-4">
+            <button 
+              type="button"
+              onClick={async () => {
+                if (window.confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
+                  const { auth } = await import('@/lib/firebase');
+                  auth.signOut();
+                }
+              }}
+              className="px-8 py-4 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-2xl transition-colors flex items-center justify-center shadow-sm whitespace-nowrap"
+            >
+              ออกจากระบบ
+            </button>
             <button 
               type="submit"
-              className="flex items-center px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors active:scale-95 shadow-sm"
+              className="flex-1 py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-2xl transition-colors flex items-center justify-center text-xl shadow-md"
             >
               <Save className="w-6 h-6 mr-3" />
               บันทึกการตั้งค่า

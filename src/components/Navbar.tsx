@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Store, PackageSearch, LayoutDashboard, WalletCards, ReceiptText, Settings } from 'lucide-react';
+import { Store, PackageSearch, LayoutDashboard, WalletCards, ReceiptText, Settings, BookUser, Cctv } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '@/store/useStore';
 
@@ -17,10 +17,13 @@ export function Navbar() {
   const navs = [
     { name: 'POS', path: '/', icon: Store },
     { name: 'บิลย้อนหลัง', path: '/history', icon: ReceiptText },
+    { name: 'ลูกหนี้', path: '/customers', icon: BookUser },
     { name: 'คลังสินค้า', path: '/inventory', icon: PackageSearch },
+    { name: 'วงจรปิด', path: '/cctv', icon: Cctv },
     { name: 'แดชบอร์ด', path: '/dashboard', icon: LayoutDashboard },
     { name: 'ตั้งค่า', path: '/settings', icon: Settings },
   ];
+    
 
   return (
     <>
