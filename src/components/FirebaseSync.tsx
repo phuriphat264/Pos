@@ -72,7 +72,7 @@ export default function FirebaseSync() {
           setDoc(storeRef, dataToSave, { merge: true }).catch(err => {
             console.error("Error pushing to Firebase:", err);
           });
-        }, 2000);
+        }, 300);
       });
     });
 
@@ -80,7 +80,14 @@ export default function FirebaseSync() {
       unsubAuth();
       if (unsubscribeSnapshot) unsubscribeSnapshot();
       if (unsubStore) unsubStore();
-      clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        // Force flush pending changes before unmounting
+        const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+        if (dataToSave.lastUpdatedLocal > 0) {
+          setDoc(doc(db, 'pos_data', 'main_store'), dataToSave, { merge: true }).catch(console.error);
+        }
+      }
     };
   }, []);
 
