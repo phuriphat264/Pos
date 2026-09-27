@@ -3,16 +3,26 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Store, PackageSearch, LayoutDashboard, WalletCards, ReceiptText, Settings, BookUser, Cctv } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 export function Navbar() {
   const pathname = usePathname();
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [cashNote, setCashNote] = useState('');
   const [cashAmount, setCashAmount] = useState('');
   const [cashType, setCashType] = useState<'in' | 'out'>('out');
   const { addCashTransaction, storeSettings } = useStore();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const navs = [
     { name: 'POS', path: '/', icon: Store },
@@ -54,10 +64,27 @@ export function Navbar() {
             })}
           </div>
         </div>
-        <div>
+        <div className="flex items-center space-x-3">
+          {currentUser && (
+            <div className="hidden lg:flex items-center bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+              <div className="flex flex-col items-end mr-3">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">เข้าสู่ระบบโดย</span>
+                <span className="text-sm font-semibold text-blue-700">{currentUser.email}</span>
+              </div>
+              <button 
+                onClick={() => {
+                  if(window.confirm('ออกจากระบบ?')) auth.signOut();
+                }}
+                className="p-1.5 text-blue-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
+                title="ออกจากระบบ"
+              >
+                <Store className="w-4 h-4 rotate-180" />
+              </button>
+            </div>
+          )}
           <button 
             onClick={() => setIsCashModalOpen(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-semibold transition-colors border border-slate-200"
+            className="flex items-center space-x-2 px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-semibold transition-colors border border-slate-200"
           >
             <WalletCards className="w-4 h-4" />
             <span className="hidden md:inline">ลิ้นชักเงินสด</span>
