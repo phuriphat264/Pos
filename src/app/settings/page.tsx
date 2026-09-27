@@ -1,7 +1,7 @@
 'use client';
 import { useStore } from '@/store/useStore';
 import { useState, useEffect } from 'react';
-import { Settings, Save, Store, MapPin, Percent, Banknote } from 'lucide-react';
+import { Settings, Save, Store, MapPin, Banknote, Trash2, AlertTriangle } from 'lucide-react';
 
 export default function SettingsPage() {
   const { storeSettings, updateSettings } = useStore();
@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [cashFloat, setCashFloat] = useState('');
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     setName(storeSettings.name);
@@ -24,6 +25,41 @@ export default function SettingsPage() {
       cashFloat: Number(cashFloat) || 0
     });
     alert('บันทึกการตั้งค่าเรียบร้อยแล้ว');
+  };
+
+  const handleClearAllData = async () => {
+    const confirm1 = window.confirm('⚠️ คุณต้องการลบข้อมูลทั้งหมดใช่หรือไม่?\n\nสินค้า, บิลขาย, ลูกหนี้, เงินสด ทุกอย่างจะถูกลบหมดเลย!');
+    if (!confirm1) return;
+    
+    const confirm2 = window.confirm('🚨 ยืนยันอีกครั้ง: ข้อมูลจะหายถาวร ไม่สามารถกู้คืนได้!\n\nกด OK เพื่อลบทั้งหมด');
+    if (!confirm2) return;
+
+    setIsClearing(true);
+    try {
+      const { db, doc } = await import('@/lib/firebase');
+      const { deleteDoc, setDoc } = await import('firebase/firestore');
+      
+      // 1. Delete the Firebase document completely
+      await deleteDoc(doc(db, 'pos_data', 'main_store'));
+      
+      // 2. Clear localStorage
+      localStorage.removeItem('pos-storage');
+      
+      // 3. Reset local state
+      useStore.getState().resetStore();
+      
+      // 4. Push empty state to Firebase
+      const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...freshData } = useStore.getState();
+      await setDoc(doc(db, 'pos_data', 'main_store'), { ...freshData, lastUpdatedLocal: Date.now() });
+      
+      alert('✅ ลบข้อมูลทั้งหมดเรียบร้อยแล้ว! ระบบพร้อมใช้งานใหม่');
+      window.location.reload();
+    } catch (err) {
+      console.error('Clear data failed:', err);
+      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   return (
@@ -98,7 +134,6 @@ export default function SettingsPage() {
               type="button"
               onClick={async () => {
                 if (window.confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
-                  // Flush any pending data to Firebase first
                   const { db, auth, doc, setDoc } = await import('@/lib/firebase');
                   const { useStore } = await import('@/store/useStore');
                   const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
@@ -121,6 +156,24 @@ export default function SettingsPage() {
             </button>
           </div>
         </form>
+
+        {/* Danger Zone */}
+        <div className="p-8 border-t-2 border-rose-200 bg-rose-50/30">
+          <div className="flex items-center space-x-2 mb-4">
+            <AlertTriangle className="w-5 h-5 text-rose-500" />
+            <h2 className="text-xl font-bold text-rose-700">โซนอันตราย</h2>
+          </div>
+          <p className="text-slate-600 mb-4">ลบข้อมูลทั้งหมดในระบบ (สินค้า, บิลขาย, ลูกหนี้, เงินสด) เพื่อเริ่มต้นใหม่ตั้งแต่ศูนย์</p>
+          <button
+            type="button"
+            onClick={handleClearAllData}
+            disabled={isClearing}
+            className="px-6 py-3 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white font-bold rounded-xl transition-colors flex items-center space-x-2 shadow-sm"
+          >
+            <Trash2 className="w-5 h-5" />
+            <span>{isClearing ? 'กำลังลบข้อมูล...' : 'ล้างข้อมูลทั้งหมด'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );
