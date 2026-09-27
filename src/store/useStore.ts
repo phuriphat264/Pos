@@ -99,7 +99,7 @@ interface AppState {
 
   // Sales
   sales: Sale[];
-  checkout: (type: 'cash' | 'promptpay' | 'credit', customerId?: string) => void;
+  checkout: (type: 'cash' | 'promptpay' | 'credit', customerId?: string, received?: number, change?: number) => void;
   voidSale: (id: string) => void;
 
   // Cash Drawer
@@ -238,7 +238,7 @@ export const useStore = create<AppState>()(
       },
 
       sales: [],
-      checkout: (type, customerId) => {
+      checkout: (type, customerId, received, change) => {
         const { cart, getCartTotal } = get();
         const total = getCartTotal();
         if (total === 0) return;
@@ -286,13 +286,30 @@ export const useStore = create<AppState>()(
 
           let newCashTransactions = [...state.cashTransactions];
           if (type === 'cash') {
-            newCashTransactions.push({
-              id: 'ct' + Date.now(),
-              type: 'in',
-              amount: total,
-              note: 'ขายหน้าร้าน (เงินสด)',
-              date: new Date().toISOString()
-            });
+            if (received && change && change > 0) {
+              newCashTransactions.push({
+                id: 'ct' + Date.now() + 'in',
+                type: 'in',
+                amount: received,
+                note: `รับเงินสด (บิล ${newSale.id})`,
+                date: new Date().toISOString()
+              });
+              newCashTransactions.push({
+                id: 'ct' + Date.now() + 'out',
+                type: 'out',
+                amount: change,
+                note: `เงินทอน (บิล ${newSale.id})`,
+                date: new Date().toISOString()
+              });
+            } else {
+              newCashTransactions.push({
+                id: 'ct' + Date.now(),
+                type: 'in',
+                amount: total,
+                note: `ขายหน้าร้าน (บิล ${newSale.id})`,
+                date: new Date().toISOString()
+              });
+            }
           }
 
           return {

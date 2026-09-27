@@ -25,7 +25,9 @@ export function PosRightPanel() {
 
   const handleCashPayment = () => {
     if (Number(cashReceived) >= total) {
-      checkout('cash');
+      const received = Number(cashReceived);
+      const change = received - total;
+      checkout('cash', undefined, received, change);
       setPaymentMode('none');
       setCashReceived('');
     } else {
