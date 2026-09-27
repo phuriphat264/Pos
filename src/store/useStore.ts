@@ -40,6 +40,16 @@ export type Sale = {
   isVoided?: boolean;
 };
 
+export type CustomerTransaction = {
+  id: string;
+  customerId: string;
+  type: 'add_debt' | 'pay_debt' | 'sale_credit' | 'void_credit';
+  amount: number;
+  date: string;
+  note: string;
+  saleId?: string;
+};
+
 export type CashTransaction = {
   id: string;
   type: 'in' | 'out';
@@ -80,8 +90,12 @@ interface AppState {
 
   // Customers
   customers: Customer[];
+  customerTransactions: CustomerTransaction[];
   payDebt: (id: string, amount: number) => void;
   addCustomer: (name: string) => string;
+  editCustomer: (id: string, name: string) => void;
+  deleteCustomer: (id: string) => void;
+  addManualDebt: (id: string, amount: number, note: string) => void;
 
   // Sales
   sales: Sale[];
@@ -176,12 +190,22 @@ export const useStore = create<AppState>()(
       })),
 
       customers: [],
+      customerTransactions: [],
       payDebt: (id, amount) => {
         const customer = get().customers.find(c => c.id === id);
         if (!customer) return;
         get().addCashTransaction('in', amount, `ชำระหนี้จากลูกค้า ${customer.name}`);
+        const newTransaction: CustomerTransaction = {
+          id: 'ctx' + Date.now(),
+          customerId: id,
+          type: 'pay_debt',
+          amount,
+          date: new Date().toISOString(),
+          note: 'ชำระหนี้'
+        };
         set((state) => ({
-          customers: state.customers.map(c => c.id === id ? { ...c, debt: Math.max(0, c.debt - amount) } : c)
+          customers: state.customers.map(c => c.id === id ? { ...c, debt: Math.max(0, c.debt - amount) } : c),
+          customerTransactions: [...state.customerTransactions, newTransaction]
         }));
       },
       addCustomer: (name) => {
@@ -190,6 +214,27 @@ export const useStore = create<AppState>()(
           customers: [...state.customers, { id: newId, name, debt: 0 }]
         }));
         return newId;
+      },
+      editCustomer: (id, name) => set((state) => ({
+        customers: state.customers.map(c => c.id === id ? { ...c, name } : c)
+      })),
+      deleteCustomer: (id) => set((state) => ({
+        customers: state.customers.filter(c => c.id !== id),
+        customerTransactions: state.customerTransactions.filter(ctx => ctx.customerId !== id)
+      })),
+      addManualDebt: (id, amount, note) => {
+        const newTransaction: CustomerTransaction = {
+          id: 'ctx' + Date.now(),
+          customerId: id,
+          type: 'add_debt',
+          amount,
+          date: new Date().toISOString(),
+          note
+        };
+        set((state) => ({
+          customers: state.customers.map(c => c.id === id ? { ...c, debt: c.debt + amount } : c),
+          customerTransactions: [...state.customerTransactions, newTransaction]
+        }));
       },
 
       sales: [],
@@ -223,10 +268,20 @@ export const useStore = create<AppState>()(
           });
 
           let newCustomers = [...state.customers];
+          let newCustomerTransactions = [...state.customerTransactions];
           if (type === 'credit' && customerId) {
             newCustomers = newCustomers.map(c =>
               c.id === customerId ? { ...c, debt: c.debt + total } : c
             );
+            newCustomerTransactions.push({
+              id: 'ctx' + Date.now(),
+              customerId,
+              type: 'sale_credit',
+              amount: total,
+              date: new Date().toISOString(),
+              note: `บิลขาย ${newSale.id}`,
+              saleId: newSale.id
+            });
           }
 
           let newCashTransactions = [...state.cashTransactions];
@@ -244,6 +299,7 @@ export const useStore = create<AppState>()(
             sales: [...state.sales, newSale],
             inventory: newInventory,
             customers: newCustomers,
+            customerTransactions: newCustomerTransactions,
             cashTransactions: newCashTransactions,
             cart: []
           };
@@ -268,10 +324,20 @@ export const useStore = create<AppState>()(
         });
 
         let newCustomers = [...state.customers];
+        let newCustomerTransactions = [...state.customerTransactions];
         if (sale.type === 'credit' && sale.customerId) {
           newCustomers = newCustomers.map(c =>
             c.id === sale.customerId ? { ...c, debt: Math.max(0, c.debt - sale.total) } : c
           );
+          newCustomerTransactions.push({
+            id: 'ctx_void_' + Date.now(),
+            customerId: sale.customerId,
+            type: 'void_credit',
+            amount: sale.total,
+            date: new Date().toISOString(),
+            note: `ยกเลิกบิล ${sale.id}`,
+            saleId: sale.id
+          });
         }
 
         let newCashTransactions = [...state.cashTransactions];
@@ -289,6 +355,7 @@ export const useStore = create<AppState>()(
           sales: state.sales.map(s => s.id === id ? { ...s, isVoided: true } : s),
           inventory: newInventory,
           customers: newCustomers,
+          customerTransactions: newCustomerTransactions,
           cashTransactions: newCashTransactions
         };
       }),
@@ -339,6 +406,7 @@ export const useStore = create<AppState>()(
         cashTransactions: [],
         heldBills: [],
         customers: [],
+        customerTransactions: [],
         storeSettings: {
           name: 'ร้านค้า POS',
           address: '',
