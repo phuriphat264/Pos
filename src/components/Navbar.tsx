@@ -98,8 +98,18 @@ export function Navbar() {
                   try {
                     const { doc, setDoc } = await import('firebase/firestore');
                     const storeRef = doc(db, 'pos_data', 'main_store');
-                    const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
-                    dataToSave.lastUpdatedLocal = Date.now();
+                    const state = useStore.getState();
+                    const dataToSave = {
+                      inventory: state.inventory,
+                      cart: state.cart,
+                      sales: state.sales,
+                      cashTransactions: state.cashTransactions,
+                      heldBills: state.heldBills,
+                      customers: state.customers,
+                      customerTransactions: state.customerTransactions || [],
+                      storeSettings: state.storeSettings,
+                      lastUpdatedLocal: Date.now()
+                    };
                     await setDoc(storeRef, dataToSave);
                     alert('ส่งข้อมูลขึ้นคลาวด์สำเร็จ!');
                   } catch (e) {
@@ -117,7 +127,18 @@ export function Navbar() {
                 onClick={async () => {
                   if(window.confirm('ออกจากระบบ?')) {
                     // Flush pending data to Firebase before signing out
-                    const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+                    const state = useStore.getState();
+                    const dataToSave = {
+                      inventory: state.inventory,
+                      cart: state.cart,
+                      sales: state.sales,
+                      cashTransactions: state.cashTransactions,
+                      heldBills: state.heldBills,
+                      customers: state.customers,
+                      customerTransactions: state.customerTransactions || [],
+                      storeSettings: state.storeSettings,
+                      lastUpdatedLocal: state.lastUpdatedLocal
+                    };
                     if ((dataToSave.lastUpdatedLocal || 0) > 0) {
                       const { doc: fbDoc, setDoc: fbSetDoc } = await import('firebase/firestore');
                       await fbSetDoc(fbDoc(db, 'pos_data', 'main_store'), dataToSave).catch(console.error);

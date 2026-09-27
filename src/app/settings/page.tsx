@@ -49,8 +49,19 @@ export default function SettingsPage() {
       useStore.getState().resetStore();
       
       // 4. Push empty state to Firebase
-      const { setStoreFromFirebase, resetStore, ...freshData } = useStore.getState();
-      await setDoc(doc(db, 'pos_data', 'main_store'), { ...freshData, lastUpdatedLocal: Date.now() });
+      const state = useStore.getState();
+      const freshData = {
+        inventory: state.inventory,
+        cart: state.cart,
+        sales: state.sales,
+        cashTransactions: state.cashTransactions,
+        heldBills: state.heldBills,
+        customers: state.customers,
+        customerTransactions: state.customerTransactions || [],
+        storeSettings: state.storeSettings,
+        lastUpdatedLocal: Date.now()
+      };
+      await setDoc(doc(db, 'pos_data', 'main_store'), freshData);
       
       alert('✅ ลบข้อมูลทั้งหมดเรียบร้อยแล้ว! ระบบพร้อมใช้งานใหม่');
       window.location.reload();
@@ -136,7 +147,18 @@ export default function SettingsPage() {
                 if (window.confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
                   const { db, auth, doc, setDoc } = await import('@/lib/firebase');
                   const { useStore } = await import('@/store/useStore');
-                  const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+                  const state = useStore.getState();
+                  const dataToSave = {
+                    inventory: state.inventory,
+                    cart: state.cart,
+                    sales: state.sales,
+                    cashTransactions: state.cashTransactions,
+                    heldBills: state.heldBills,
+                    customers: state.customers,
+                    customerTransactions: state.customerTransactions || [],
+                    storeSettings: state.storeSettings,
+                    lastUpdatedLocal: state.lastUpdatedLocal
+                  };
                   if ((dataToSave.lastUpdatedLocal || 0) > 0) {
                     await setDoc(doc(db, 'pos_data', 'main_store'), dataToSave).catch(console.error);
                   }
