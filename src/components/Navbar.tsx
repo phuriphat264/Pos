@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Store, PackageSearch, LayoutDashboard, WalletCards, ReceiptText, Settings, BookUser, Cctv } from 'lucide-react';
+import { Store, PackageSearch, LayoutDashboard, WalletCards, ReceiptText, Settings, BookUser, Cctv, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { auth } from '@/lib/firebase';
@@ -64,13 +64,14 @@ export function Navbar() {
             })}
           </div>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 md:space-x-3">
           {currentUser && (
-            <div className="hidden lg:flex items-center bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
-              <div className="flex flex-col items-end mr-3">
+            <div className="flex items-center bg-blue-50 px-2 py-1.5 md:px-3 rounded-lg border border-blue-100">
+              <div className="hidden md:flex flex-col items-end mr-3">
                 <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">เข้าสู่ระบบโดย</span>
                 <span className="text-sm font-semibold text-blue-700">{currentUser.email}</span>
               </div>
+              <span className="md:hidden text-xs font-semibold text-blue-700 mr-2 max-w-[80px] truncate">{currentUser.email?.split('@')[0]}</span>
               <button 
                 onClick={() => {
                   if(window.confirm('ออกจากระบบ?')) auth.signOut();
@@ -78,7 +79,7 @@ export function Navbar() {
                 className="p-1.5 text-blue-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
                 title="ออกจากระบบ"
               >
-                <Store className="w-4 h-4 rotate-180" />
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -87,7 +88,7 @@ export function Navbar() {
             className="flex items-center space-x-2 px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-semibold transition-colors border border-slate-200"
           >
             <WalletCards className="w-4 h-4" />
-            <span className="hidden md:inline">ลิ้นชักเงินสด</span>
+            <span className="hidden md:inline">ลิ้นชัก</span>
           </button>
         </div>
       </nav>
