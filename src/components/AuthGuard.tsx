@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { Store, Loader2, Mail, Lock } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
@@ -36,6 +36,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     setIsSubmitting(true);
 
     try {
+      await setPersistence(auth, browserLocalPersistence);
       if (isRegistering) {
         await createUserWithEmailAndPassword(auth, email, password);
       } else {

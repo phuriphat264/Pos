@@ -48,7 +48,13 @@ export default function FirebaseSync() {
       unsubStore = useStore.subscribe((state, prevState) => {
         // Ignore if this update came from Firebase itself
         if (state.isRemoteUpdate) {
-          useStore.setState({ isRemoteUpdate: false });
+          // Reset the flag without triggering a push cycle
+          setTimeout(() => useStore.setState({ isRemoteUpdate: false }), 0);
+          return;
+        }
+        
+        // If the only thing that changed was isRemoteUpdate (from true to false), ignore it.
+        if (prevState.isRemoteUpdate && !state.isRemoteUpdate) {
           return;
         }
 

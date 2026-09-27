@@ -361,7 +361,7 @@ export const useStore = create<AppState>()(
   }),
 
   isRemoteUpdate: false,
-  lastUpdatedLocal: Date.now(),
+  lastUpdatedLocal: 0,
   setStoreFromFirebase: (data) => set({ ...data, isRemoteUpdate: true }),
   resetStore: () => set({
     inventory: mockProducts,
@@ -375,7 +375,7 @@ export const useStore = create<AppState>()(
       address: '',
       cashFloat: 1000
     },
-    lastUpdatedLocal: Date.now()
+    lastUpdatedLocal: 0 // MUST be 0 so Firebase overwrites it on next login
   })
     }),
     {
