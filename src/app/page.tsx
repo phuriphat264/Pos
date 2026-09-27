@@ -9,7 +9,7 @@ export default function Home() {
       <div className="flex-1 border-r border-gray-200 overflow-hidden flex flex-col">
         <PosLeftPanel />
       </div>
-      <div className="w-full md:w-[400px] lg:w-[480px] bg-white flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-0">
+      <div className="w-full md:w-[360px] lg:w-[400px] xl:w-[480px] flex-shrink-0 bg-white flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.1)] z-0">
         <PosRightPanel />
       </div>
     </div>

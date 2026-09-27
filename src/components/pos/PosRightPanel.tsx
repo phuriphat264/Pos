@@ -156,7 +156,7 @@ export function PosRightPanel() {
                     </button>
                   </div>
                 </div>
-                <div className="text-2xl font-extrabold text-blue-600 w-28 text-right">
+                <div className="text-xl md:text-2xl font-extrabold text-blue-600 text-right min-w-[80px]">
                   ฿{item.price * item.qty}
                 </div>
                 <button 

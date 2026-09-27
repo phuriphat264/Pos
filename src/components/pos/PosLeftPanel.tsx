@@ -217,7 +217,7 @@ export function PosLeftPanel() {
               )}
             </div>
             
-            <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-max overflow-y-auto pb-8">
+            <div className="w-full grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 auto-rows-max overflow-y-auto pb-8">
               {filteredCatalog.map((product) => (
                 <button
                   key={product.id}
