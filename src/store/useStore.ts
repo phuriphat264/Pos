@@ -67,7 +67,7 @@ interface AppState {
 
   // Cart
   cart: CartItem[];
-  addToCart: (item: { productId?: string; name: string; price: number; qty: number }) => void;
+  addToCart: (item: { productId?: string; name: string; price: number; cost?: number; qty: number }) => void;
   updateCartQty: (id: string, qty: number) => void;
   removeFromCart: (index: number) => void;
   clearCart: () => void;

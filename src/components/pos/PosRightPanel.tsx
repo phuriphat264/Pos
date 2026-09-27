@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { ShoppingCart, Trash2, Banknote, QrCode, BookUser, X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,12 @@ export function PosRightPanel() {
   const [showHeldBills, setShowHeldBills] = useState(false);
 
   const total = getCartTotal();
+
+  useEffect(() => {
+    if (heldBills.length === 0 && showHeldBills) {
+      setShowHeldBills(false);
+    }
+  }, [heldBills.length, showHeldBills]);
 
   const handleCashPayment = () => {
     if (Number(cashReceived) >= total) {
@@ -120,7 +126,6 @@ export function PosRightPanel() {
               {heldBills.length === 0 && (
                 <div className="text-center text-slate-500 mt-10 font-medium">
                   ไม่มีบิลที่พักไว้
-                  {setShowHeldBills(false)}
                 </div>
               )}
             </div>
