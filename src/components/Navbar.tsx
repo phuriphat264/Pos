@@ -5,23 +5,35 @@ import { cn } from '@/lib/utils';
 import { Store, PackageSearch, LayoutDashboard, WalletCards, ReceiptText, Settings, BookUser, Cctv, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
-import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { getStoreData, updateStoreData } from '@/lib/api';
+import { User } from 'lucide-react';
+// removed firebase user type
 
 export function Navbar() {
   const pathname = usePathname();
   const [isCashModalOpen, setIsCashModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<{email: string} | null>(null);
   const [cashNote, setCashNote] = useState('');
   const [cashAmount, setCashAmount] = useState('');
   const [cashType, setCashType] = useState<'in' | 'out'>('out');
   const { addCashTransaction, storeSettings } = useStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
+    const checkAuth = async () => {
+      const token = localStorage.getItem('pos_token');
+      if (token) {
+        try {
+          const res = await fetch(`http://${typeof window !== 'undefined' ? (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname) : '127.0.0.1'}:8000/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setCurrentUser({ email: data.email });
+          }
+        } catch (err) { }
+      }
+    };
+    checkAuth();
   }, []);
 
   const navs = [
@@ -75,11 +87,11 @@ export function Navbar() {
               <button 
                 onClick={async () => {
                   try {
-                    const { doc, getDoc } = await import('firebase/firestore');
-                    const storeRef = doc(db, 'pos_data', 'main_store');
-                    const snap = await getDoc(storeRef);
-                    if (snap.exists()) {
-                      useStore.getState().setStoreFromFirebase(snap.data() as any);
+                    const token = localStorage.getItem('pos_token');
+                    if (!token) return;
+                    const res = await getStoreData(token);
+                    if (res.data) {
+                      useStore.getState().setStoreFromFirebase(res.data);
                       alert('ซิงค์ข้อมูลจากคลาวด์สำเร็จ!');
                     }
                   } catch (e) {
@@ -96,8 +108,8 @@ export function Navbar() {
               <button 
                 onClick={async () => {
                   try {
-                    const { doc, setDoc } = await import('firebase/firestore');
-                    const storeRef = doc(db, 'pos_data', 'main_store');
+                    const token = localStorage.getItem('pos_token');
+                    if (!token) return;
                     const state = useStore.getState();
                     const dataToSave = {
                       inventory: state.inventory,
@@ -110,7 +122,7 @@ export function Navbar() {
                       storeSettings: state.storeSettings,
                       lastUpdatedLocal: Date.now()
                     };
-                    await setDoc(storeRef, dataToSave);
+                    await updateStoreData(token, dataToSave);
                     alert('ส่งข้อมูลขึ้นคลาวด์สำเร็จ!');
                   } catch (e) {
                     alert('ไม่สามารถส่งข้อมูลขึ้นคลาวด์ได้');
@@ -126,7 +138,7 @@ export function Navbar() {
               <button 
                 onClick={async () => {
                   if(window.confirm('ออกจากระบบ?')) {
-                    // Flush pending data to Firebase before signing out
+                    const token = localStorage.getItem('pos_token');
                     const state = useStore.getState();
                     const dataToSave = {
                       inventory: state.inventory,
@@ -139,11 +151,11 @@ export function Navbar() {
                       storeSettings: state.storeSettings,
                       lastUpdatedLocal: state.lastUpdatedLocal
                     };
-                    if ((dataToSave.lastUpdatedLocal || 0) > 0) {
-                      const { doc: fbDoc, setDoc: fbSetDoc } = await import('firebase/firestore');
-                      await fbSetDoc(fbDoc(db, 'pos_data', 'main_store'), dataToSave).catch(console.error);
+                    if (token && (dataToSave.lastUpdatedLocal || 0) > 0) {
+                      await updateStoreData(token, dataToSave).catch(console.error);
                     }
-                    auth.signOut();
+                    localStorage.removeItem('pos_token');
+                    window.location.reload();
                   }
                 }}
                 className="p-1.5 text-blue-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-colors"

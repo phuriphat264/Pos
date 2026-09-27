@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { AuthGuard } from "@/components/AuthGuard";
-import FirebaseSync from "@/components/FirebaseSync";
+import BackendSync from "@/components/BackendSync";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="th">
       <body className={`${inter.className} bg-gray-50 text-gray-900 h-screen flex flex-col overflow-hidden`}>
         <AuthGuard>
-          <FirebaseSync />
+          <BackendSync />
           <Navbar />
           <main className="flex-1 overflow-hidden">
             {children}

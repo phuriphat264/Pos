@@ -36,19 +36,16 @@ export default function SettingsPage() {
 
     setIsClearing(true);
     try {
-      const { db, doc } = await import('@/lib/firebase');
-      const { deleteDoc, setDoc } = await import('firebase/firestore');
+      const { clearStoreData, updateStoreData } = await import('@/lib/api');
+      const token = localStorage.getItem('pos_token');
       
-      // 1. Delete the Firebase document completely
-      await deleteDoc(doc(db, 'pos_data', 'main_store'));
+      if (token) {
+        await clearStoreData(token);
+      }
       
-      // 2. Clear localStorage
       localStorage.removeItem('pos-storage');
-      
-      // 3. Reset local state
       useStore.getState().resetStore();
       
-      // 4. Push empty state to Firebase
       const state = useStore.getState();
       const freshData = {
         inventory: state.inventory,
@@ -61,7 +58,10 @@ export default function SettingsPage() {
         storeSettings: state.storeSettings,
         lastUpdatedLocal: Date.now()
       };
-      await setDoc(doc(db, 'pos_data', 'main_store'), freshData);
+      
+      if (token) {
+        await updateStoreData(token, freshData);
+      }
       
       alert('✅ ลบข้อมูลทั้งหมดเรียบร้อยแล้ว! ระบบพร้อมใช้งานใหม่');
       window.location.reload();
@@ -145,8 +145,9 @@ export default function SettingsPage() {
               type="button"
               onClick={async () => {
                 if (window.confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
-                  const { db, auth, doc, setDoc } = await import('@/lib/firebase');
+                  const { updateStoreData } = await import('@/lib/api');
                   const { useStore } = await import('@/store/useStore');
+                  const token = localStorage.getItem('pos_token');
                   const state = useStore.getState();
                   const dataToSave = {
                     inventory: state.inventory,
@@ -159,10 +160,11 @@ export default function SettingsPage() {
                     storeSettings: state.storeSettings,
                     lastUpdatedLocal: state.lastUpdatedLocal
                   };
-                  if ((dataToSave.lastUpdatedLocal || 0) > 0) {
-                    await setDoc(doc(db, 'pos_data', 'main_store'), dataToSave).catch(console.error);
+                  if (token && (dataToSave.lastUpdatedLocal || 0) > 0) {
+                    await updateStoreData(token, dataToSave).catch(console.error);
                   }
-                  auth.signOut();
+                  localStorage.removeItem('pos_token');
+                  window.location.reload();
                 }
               }}
               className="px-8 py-4 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-2xl transition-colors flex items-center justify-center shadow-sm whitespace-nowrap"

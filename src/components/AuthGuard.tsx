@@ -1,13 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { Store, Loader2, Mail, Lock } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const { storeSettings } = useStore();
 
@@ -18,17 +16,28 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) {
-        // Clear localStorage so stale local data doesn't override Firebase on next login
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('pos-storage');
+    const checkAuth = async () => {
+      const token = localStorage.getItem('pos_token');
+      if (token) {
+        try {
+          const res = await fetch(`http://${typeof window !== 'undefined' ? (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname) : '127.0.0.1'}:8000/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            setIsAuthenticated(true);
+          } else {
+            localStorage.removeItem('pos_token');
+            localStorage.removeItem('pos-storage');
+          }
+        } catch (err) {
+          console.error(err);
         }
+      } else {
+        localStorage.removeItem('pos-storage');
       }
-      setUser(currentUser);
       setLoading(false);
-    });
-    return () => unsubscribe();
+    };
+    checkAuth();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,25 +46,33 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     setIsSubmitting(true);
 
     try {
-      await setPersistence(auth, browserLocalPersistence);
+      const endpoint = isRegistering ? '/api/auth/register' : '/api/auth/login';
+      const res = await fetch(`http://${typeof window !== 'undefined' ? (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname) : '127.0.0.1'}:8000${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: isRegistering ? JSON.stringify({ email, password }) : new URLSearchParams({
+          username: email,
+          password: password,
+        }).toString(),
+        ...(isRegistering ? {} : { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      }
+
       if (isRegistering) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        alert('สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ');
+        setIsRegistering(false);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        localStorage.setItem('pos_token', data.access_token);
+        setIsAuthenticated(true);
       }
     } catch (error: any) {
       console.error("Auth failed:", error);
-      if (error.code === 'auth/email-already-in-use') {
-        setErrorMsg('อีเมลนี้ถูกใช้งานไปแล้ว');
-      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        setErrorMsg('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
-      } else if (error.code === 'auth/weak-password') {
-        setErrorMsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
-      } else if (error.code === 'auth/invalid-email') {
-        setErrorMsg('รูปแบบอีเมลไม่ถูกต้อง');
-      } else {
-        setErrorMsg('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
-      }
+      setErrorMsg(error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -69,7 +86,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-300">
@@ -159,6 +176,5 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If user is authenticated, render the children
   return <>{children}</>;
 }
