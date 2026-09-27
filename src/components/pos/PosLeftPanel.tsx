@@ -245,7 +245,14 @@ export function PosLeftPanel() {
               ))}
               {filteredCatalog.length === 0 && (
                 <div className="col-span-full text-center py-12 text-slate-500 font-medium">
-                  ไม่พบสินค้าที่ค้นหา
+                  {inventory.length === 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-lg">📦 ยังไม่มีสินค้าในระบบ</p>
+                      <p className="text-sm">ไปเพิ่มสินค้าได้ที่เมนู <strong>&quot;คลังสินค้า&quot;</strong> ด้านบน</p>
+                    </div>
+                  ) : (
+                    'ไม่พบสินค้าที่ค้นหา'
+                  )}
                 </div>
               )}
             </div>
