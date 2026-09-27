@@ -413,9 +413,8 @@ export const useStore = create<AppState>()(
         };
       }),
 
-      isRemoteUpdate: false,
       lastUpdatedLocal: 0,
-      setStoreFromFirebase: (data) => set({ ...data, isRemoteUpdate: true }),
+      setStoreFromFirebase: (data) => set({ ...data }),
       resetStore: () => set({
         inventory: [],
         cart: [],
@@ -433,11 +432,7 @@ export const useStore = create<AppState>()(
       })
     }),
     {
-      name: 'pos-storage',
-      partialize: (state) => {
-        const { isRemoteUpdate, ...rest } = state;
-        return rest;
-      }
+      name: 'pos-storage'
     }
   )
 );

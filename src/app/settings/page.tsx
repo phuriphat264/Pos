@@ -49,7 +49,7 @@ export default function SettingsPage() {
       useStore.getState().resetStore();
       
       // 4. Push empty state to Firebase
-      const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...freshData } = useStore.getState();
+      const { setStoreFromFirebase, resetStore, ...freshData } = useStore.getState();
       await setDoc(doc(db, 'pos_data', 'main_store'), { ...freshData, lastUpdatedLocal: Date.now() });
       
       alert('✅ ลบข้อมูลทั้งหมดเรียบร้อยแล้ว! ระบบพร้อมใช้งานใหม่');
@@ -136,7 +136,7 @@ export default function SettingsPage() {
                 if (window.confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
                   const { db, auth, doc, setDoc } = await import('@/lib/firebase');
                   const { useStore } = await import('@/store/useStore');
-                  const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+                  const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
                   if ((dataToSave.lastUpdatedLocal || 0) > 0) {
                     await setDoc(doc(db, 'pos_data', 'main_store'), dataToSave).catch(console.error);
                   }

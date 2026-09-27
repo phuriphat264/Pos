@@ -97,7 +97,7 @@ export function Navbar() {
                 onClick={async () => {
                   if(window.confirm('ออกจากระบบ?')) {
                     // Flush pending data to Firebase before signing out
-                    const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+                    const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
                     if ((dataToSave.lastUpdatedLocal || 0) > 0) {
                       const { doc: fbDoc, setDoc: fbSetDoc } = await import('firebase/firestore');
                       await fbSetDoc(fbDoc(db, 'pos_data', 'main_store'), dataToSave).catch(console.error);

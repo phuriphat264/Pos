@@ -62,7 +62,7 @@ export default function FirebaseSync() {
           // No data on Firebase yet: push local data as initial seed
           console.log('Firebase Sync: No cloud data, pushing initial data');
           isInitialLoad = false;
-          const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+          const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
           setDoc(storeRef, { ...dataToSave, lastUpdatedLocal: Date.now() }).catch(console.error);
         }
       });
@@ -70,7 +70,7 @@ export default function FirebaseSync() {
       // 2. Listen for local changes → push TO Firebase
       unsubStore = useStore.subscribe((state, prevState) => {
         // Don't push if we're syncing from Firebase
-        if (isSyncing || state.isRemoteUpdate) {
+        if (isSyncing) {
           return;
         }
 
@@ -90,7 +90,7 @@ export default function FirebaseSync() {
         timeoutId = setTimeout(() => {
           if (isSyncing) return;
           console.log('Firebase Sync: Pushing to cloud...');
-          const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+          const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
           // Use setDoc WITHOUT merge so that deleted items are actually removed from Firebase
           setDoc(storeRef, dataToSave).catch(err => {
             console.error('Firebase Sync: Push failed', err);
