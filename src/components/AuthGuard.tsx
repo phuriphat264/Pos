@@ -20,7 +20,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       const token = localStorage.getItem('pos_token');
       if (token) {
         try {
-          const res = await fetch(`http://${typeof window !== 'undefined' ? (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname) : '127.0.0.1'}:8000/api/auth/me`, {
+          const res = await fetch((process.env.NEXT_PUBLIC_API_URL || `http://${typeof window !== 'undefined' ? (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname) : '127.0.0.1'}:8000`) + '/api/auth/me', {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
@@ -47,7 +47,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     try {
       const endpoint = isRegistering ? '/api/auth/register' : '/api/auth/login';
-      const res = await fetch(`http://${typeof window !== 'undefined' ? (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname) : '127.0.0.1'}:8000${endpoint}`, {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || `http://${typeof window !== 'undefined' ? (window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname) : '127.0.0.1'}:8000`) + endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: isRegistering ? JSON.stringify({ email, password }) : new URLSearchParams({
