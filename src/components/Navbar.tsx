@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Store, PackageSearch, LayoutDashboard, WalletCards, ReceiptText, Settings, BookUser, Cctv, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 export function Navbar() {
@@ -73,8 +73,16 @@ export function Navbar() {
               </div>
               <span className="md:hidden text-xs font-semibold text-blue-700 mr-2 max-w-[80px] truncate">{currentUser.email?.split('@')[0]}</span>
               <button 
-                onClick={() => {
-                  if(window.confirm('ออกจากระบบ?')) auth.signOut();
+                onClick={async () => {
+                  if(window.confirm('ออกจากระบบ?')) {
+                    // Flush pending data to Firebase before signing out
+                    const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+                    if ((dataToSave.lastUpdatedLocal || 0) > 0) {
+                      const { doc: fbDoc, setDoc: fbSetDoc } = await import('firebase/firestore');
+                      await fbSetDoc(fbDoc(db, 'pos_data', 'main_store'), dataToSave).catch(console.error);
+                    }
+                    auth.signOut();
+                  }
                 }}
                 className="p-1.5 text-blue-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
                 title="ออกจากระบบ"

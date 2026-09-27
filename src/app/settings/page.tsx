@@ -98,7 +98,13 @@ export default function SettingsPage() {
               type="button"
               onClick={async () => {
                 if (window.confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
-                  const { auth } = await import('@/lib/firebase');
+                  // Flush any pending data to Firebase first
+                  const { db, auth, doc, setDoc } = await import('@/lib/firebase');
+                  const { useStore } = await import('@/store/useStore');
+                  const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+                  if ((dataToSave.lastUpdatedLocal || 0) > 0) {
+                    await setDoc(doc(db, 'pos_data', 'main_store'), dataToSave).catch(console.error);
+                  }
                   auth.signOut();
                 }
               }}
