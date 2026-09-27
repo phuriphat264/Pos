@@ -84,7 +84,7 @@ export default function FirebaseSync() {
         clearTimeout(timeoutId);
         // Force flush pending changes before unmounting
         const { isRemoteUpdate, setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
-        if (dataToSave.lastUpdatedLocal > 0) {
+        if ((dataToSave.lastUpdatedLocal || 0) > 0) {
           setDoc(doc(db, 'pos_data', 'main_store'), dataToSave, { merge: true }).catch(console.error);
         }
       }
