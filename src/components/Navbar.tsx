@@ -95,6 +95,26 @@ export function Navbar() {
               </button>
               <button 
                 onClick={async () => {
+                  try {
+                    const { doc, setDoc } = await import('firebase/firestore');
+                    const storeRef = doc(db, 'pos_data', 'main_store');
+                    const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
+                    dataToSave.lastUpdatedLocal = Date.now();
+                    await setDoc(storeRef, dataToSave);
+                    alert('ส่งข้อมูลขึ้นคลาวด์สำเร็จ!');
+                  } catch (e) {
+                    alert('ไม่สามารถส่งข้อมูลขึ้นคลาวด์ได้');
+                  }
+                }}
+                className="p-1.5 text-blue-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-md transition-colors mr-1"
+                title="บังคับส่งข้อมูลขึ้นคลาวด์"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              </button>
+              <button 
+                onClick={async () => {
                   if(window.confirm('ออกจากระบบ?')) {
                     // Flush pending data to Firebase before signing out
                     const { setStoreFromFirebase, resetStore, ...dataToSave } = useStore.getState();
